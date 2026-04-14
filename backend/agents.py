@@ -3,8 +3,7 @@ import json
 import uuid
 import asyncio
 import time
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from pydantic import BaseModel, Field, ValidationError
 from typing import List
 
@@ -40,7 +39,11 @@ class AIResponse(BaseModel):
     narration: str
 
 api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key) if api_key else None
+if api_key:
+    genai.configure(api_key=api_key)
+    print("✅ Gemini configured")
+else:
+    print("⚠️ GEMINI_API_KEY missing — using fallback mode")
 
 def _dynamic_fallback(simulation_state_json: str) -> dict:
     """
@@ -163,7 +166,9 @@ async def generate_gemini_decisions(simulation_state_json: str, emergency: bool 
     All routing decisions, predictions, and explanations originate from Gemini output.
     Powered by Google Gemini AI — AI-driven, real-time prediction, generative AI.
     """
-    if not client:
+
+    # ✅ FIX: check api_key instead of client
+    if not api_key:
         return _dynamic_fallback(simulation_state_json)
 
     prompt = _build_prompt(simulation_state_json, emergency)
@@ -171,38 +176,40 @@ async def generate_gemini_decisions(simulation_state_json: str, emergency: bool 
     try:
         loop = asyncio.get_event_loop()
 
+        # ✅ FIXED Gemini call
         def _call():
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json"
-                )
-            )
+            model = genai.GenerativeModel("gemini-2.0-flash")
+            response = model.generate_content(prompt)
             return response.text
 
-        # Run blocking SDK call in threadpool with 8s timeout
+        # Run blocking SDK call in threadpool with timeout
         text = await asyncio.wait_for(
             loop.run_in_executor(None, _call),
             timeout=8.0
         )
 
         parsed_data = json.loads(text)
-        # Inject defaults for optional fields if Gemini omits them
+
+        # Inject defaults if missing
         if "aggregate_impact" not in parsed_data:
             parsed_data["aggregate_impact"] = {"wait_time_reduction": 0, "load_balanced": 0}
+
         if "narration" not in parsed_data:
             parsed_data["narration"] = "Google Gemini AI is actively optimizing crowd flow."
+
         print(f"[Gemini OK] decisions={len(parsed_data.get('decisions',[]))}, preds={len(parsed_data.get('zone_predictions',[]))}")
+
         validated = AIResponse(**parsed_data)
         return validated.model_dump()
 
     except asyncio.TimeoutError:
         print("Gemini API timeout — using dynamic fallback")
         return _dynamic_fallback(simulation_state_json)
+
     except ValidationError as ve:
         print(f"Gemini schema validation error: {ve}")
         return _dynamic_fallback(simulation_state_json)
+
     except Exception as e:
         err_type = type(e).__name__
         print(f"Gemini API exception [{err_type}]: {str(e)[:80]}")
