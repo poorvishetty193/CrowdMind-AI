@@ -301,3 +301,11 @@ def set_simulation_phase(phase: str, request: Request):
 @app.get("/health")
 def health():
     return {"status": "ok", "ai_mode": "active" if is_ai_mode_active else "disabled"}
+
+@app.get("/")
+def root():
+    return {
+        "status": "CrowdMind AI Backend Running",
+        "ai_mode": "active" if is_ai_mode_active else "disabled",
+        "ai_engine": "google_gemini"
+    }
