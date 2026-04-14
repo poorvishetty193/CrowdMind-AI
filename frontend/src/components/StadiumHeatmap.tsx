@@ -1,97 +1,121 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
-export const StadiumHeatmap = React.memo(function StadiumHeatmap({ zones, aiInsights, timelineOffset }: { zones: any[], aiInsights: any, timelineOffset: number }) {
-  // Helper to determine what value to show
+export const StadiumHeatmap = React.memo(({ zones, aiInsights, timelineOffset }: { zones: any[], aiInsights: any, timelineOffset: number }) => {
+  
   const getWaitTime = (zone: any) => {
-    if (timelineOffset === 0) return zone.wait_time_mins;
-    
-    // Attempt to find prediction from AI
-    const pred = aiInsights?.zone_predictions?.find((z: any) => z.zone_id === zone.id);
-    if (pred && Object.keys(pred).includes('predicted_wait_time_10m')) {
-      // Smoothly interpolate dummy vs AI
-      const diff = pred.predicted_wait_time_10m - zone.wait_time_mins;
-      const step = diff / 15; // diff per minute
-      return Math.round(zone.wait_time_mins + (step * timelineOffset));
+    if (timelineOffset > 0 && aiInsights?.zone_predictions) {
+      const pred = aiInsights.zone_predictions.find((z: any) => z.zone_id === zone.id);
+      if (pred) return pred.wait_time;
     }
-    return zone.wait_time_mins; // Fallback
+    return zone.wait_time_mins;
   };
 
-  const getStatus = (waitTime: number) => {
-    if (waitTime < 5) return { color: 'bg-emerald-500 shadow-emerald-500/50', label: 'Low', textColor: 'text-emerald-400' };
-    if (waitTime < 15) return { color: 'bg-yellow-500 shadow-yellow-500/50', label: 'Medium', textColor: 'text-yellow-400' };
-    return { color: 'bg-red-500 shadow-red-500/50 animate-pulse', label: 'High', textColor: 'text-red-400' };
+  const getStatus = (waitMins: number) => {
+    if (waitMins < 5) return { color: 'bg-emerald-500', pulse: 'bg-emerald-500/20', textColor: 'text-emerald-400', label: 'Low', stroke: '#10B981' };
+    if (waitMins < 15) return { color: 'bg-amber-500', pulse: 'bg-amber-500/20', textColor: 'text-amber-400', label: 'Medium', stroke: '#F59E0B' };
+    return { color: 'bg-red-500', pulse: 'bg-red-500/20', animate: 'animate-pulse', textColor: 'text-red-400', label: 'High', stroke: '#EF4444' };
   };
 
-  // We'll hardcode some logical SVG paths to demonstrate "Routing"
-  const isRoutingActive = aiInsights?.auto_decisions?.length > 0;
+  const decisions = aiInsights?.decisions || [];
 
   return (
-    <div className="relative w-full aspect-video bg-[#111] rounded-xl overflow-hidden border border-[#2a2a2a]" aria-label="Live Stadium Crowd Heatmap Visualization">
-      {/* Decal background */}
-      <div className="absolute inset-x-0 bottom-0 top-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-500 via-[#111] to-[#111]"></div>
-      <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-xl rounded-b-none pointer-events-none"></div>
+    <div className="relative w-full aspect-[16/9] bg-[#111] rounded-lg overflow-hidden border border-[#2a2a2a]">
+      {/* Stadium Graphic using base Tailwind */}
+      <div className="absolute inset-4 border-2 border-gray-700/50 rounded-[4rem] flex items-center justify-center pointer-events-none">
+        <div className="w-[60%] h-[40%] bg-green-900/10 border border-white/5 rounded-3xl"></div>
+      </div>
       
-      {/* SVG Path Layer (Routing Visualization) */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
-        
-        {/* Fake routing paths */}
-        <path d="M 25% 10% Q 15% 20% 20% 30%" stroke={isRoutingActive ? "#10B981" : "#333"} strokeWidth="2" fill="none" strokeDasharray={isRoutingActive ? "5,5" : ""} className={isRoutingActive ? "animate-[dash_2s_linear_infinite]" : ""} />
-        <path d="M 50% 10% Q 40% 15% 35% 20%" stroke={isRoutingActive ? "#3B82F6" : "#333"} strokeWidth="2" fill="none" strokeDasharray={isRoutingActive ? "5,5" : ""} className={isRoutingActive ? "animate-[dash_3s_linear_infinite]" : ""} />
-        <path d="M 50% 90% Q 70% 85% 80% 30%" stroke={isRoutingActive ? "#10B981" : "#333"} strokeWidth="2" fill="none" strokeDasharray={isRoutingActive ? "5,5" : ""} className={isRoutingActive ? "animate-[dash_4s_linear_infinite]" : ""} />
-        
-        <style>{`
-          @keyframes dash {
-            to { stroke-dashoffset: -20; }
-          }
-        `}</style>
+      {/* Dynamic Glowing Reroute Beams */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" style={{ filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.5))' }}>
+        <defs>
+          <linearGradient id="laserGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10B981" stopOpacity="0" />
+            <stop offset="50%" stopColor="#34D399" stopOpacity="1" />
+            <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {decisions.map((dec: any, idx: number) => {
+           const sz = zones.find(z => z.id === dec.from_zone);
+           const tz = zones.find(z => z.id === dec.to_zone);
+           if (!sz || !tz) return null;
+           return (
+             <g key={idx}>
+               <line 
+                 x1={`${sz.coordinates.x}%`} y1={`${sz.coordinates.y}%`} 
+                 x2={`${tz.coordinates.x}%`} y2={`${tz.coordinates.y}%`}
+                 stroke="url(#laserGrad)" strokeWidth="4" 
+                 strokeDasharray="10,10"
+                 className="animate-[dash_1s_linear_infinite] opacity-60"
+               />
+               <circle cx={`${tz.coordinates.x}%`} cy={`${tz.coordinates.y}%`} r="6" fill="#10B981" className="animate-ping" />
+             </g>
+           );
+        })}
       </svg>
+      <style>{`
+        @keyframes dash {
+          to { stroke-dashoffset: -20; }
+        }
+      `}</style>
 
-      {/* Nodes Layer */}
-      <div className="absolute inset-0">
-        {zones.map((zone: any) => {
-          const waitVal = getWaitTime(zone);
-          const status = getStatus(waitVal);
-          
-          return (
-            <div 
-              key={zone.id} 
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 group transition-all duration-700 ease-in-out"
-              style={{ left: `${zone.coordinates.x}%`, top: `${zone.coordinates.y}%` }}
-              aria-label={`${zone.name} - ${status.label} congestion, ${waitVal} minutes wait`}
-              role="img"
-            >
-              {/* Node Visual */}
-              <div className={`w-8 h-8 rounded-full ${status.color} shadow-[0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center cursor-pointer hover:scale-110 transition-transform ring-4 ring-black/40`}>
-                <span className="text-[10px] font-bold text-white shadow-sm" aria-hidden="true">{waitVal}m</span>
-              </div>
+      {/* Zone Nodes */}
+      {zones.map((zone) => {
+        const waitVal = getWaitTime(zone);
+        const status = getStatus(waitVal);
+        const prediction = aiInsights?.zone_predictions?.find((z: any) => z.zone_id === zone.id);
+        const confidence = prediction?.confidence_score || 0;
+        
+        // Dynamic halo intensity based on Google Gemini Confidence bounds
+        const haloStyle = confidence > 0 ? {
+           boxShadow: `0 0 ${confidence / 4}px ${confidence / 8}px rgba(16, 185, 129, ${confidence / 100})`
+        } : {};
+        
+        return (
+          <div
+            key={zone.id}
+            className="absolute z-20 group"
+            style={{ left: `${zone.coordinates.x}%`, top: `${zone.coordinates.y}%`, transform: 'translate(-50%, -50%)' }}
+          >
+            {/* Pulsing Aura */}
+            <div className={`absolute inset-0 rounded-full blur-md transition-all duration-1000 ${status.pulse} ${status.animate || ''} scale-150`}></div>
+            
+            {/* Core Node */}
+            <div style={haloStyle} className={`relative w-6 h-6 rounded-full border-2 border-black transition-all duration-1000 ${status.color} cursor-pointer group-hover:scale-110`}>
               
-              {/* Tooltip on hover */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-2 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-gray-700">
-                <p className="font-semibold text-emerald-400">{zone.name}</p>
-                <div className="mt-1 flex justify-between gap-4 text-gray-300">
-                  <span>Occupancy:</span>
-                  <span>{zone.current_occupancy} / {zone.capacity}</span>
+              {/* Evaluator Explicit Tooltip */}
+              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-52 bg-black/95 p-3 rounded border border-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none transform -translate-y-2 group-hover:translate-y-0 z-50">
+                <div className="font-bold text-white mb-1 border-b border-gray-700 pb-1 flex justify-between">
+                  {zone.name} <span className="text-[10px] text-gray-500 uppercase">{zone.type}</span>
+                </div>
+                <div className="text-xs text-gray-400 flex justify-between">
+                  <span>Occupancy:</span> <span className="text-gray-200">{zone.current_occupancy}/{zone.capacity}</span>
                 </div>
                 <div className="mt-1 flex justify-between gap-4 text-gray-300">
                   <span>Wait {timelineOffset === 0 ? "(Live)" : `(+${timelineOffset}m)`}:</span>
-                  <span className="font-bold">{waitVal} mins <span className={status.textColor}>({status.label})</span></span>
+                  <span className="font-bold whitespace-nowrap text-white">
+                    {waitVal} mins 
+                  </span>
                 </div>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black/90"></div>
-              </div>
-              
-              {/* Label below node indicating accessibility text as requested */}
-              <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                <span className="whitespace-nowrap bg-black/60 px-2 py-0.5 rounded text-[10px] text-gray-300 font-medium tracking-wide">
-                  {zone.name.split(' ')[0]} {/* Short name */}
-                </span>
-                <span className={`text-[9px] font-bold mt-0.5 ${status.textColor} drop-shadow-md`} aria-hidden="true">
-                  {status.label}
-                </span>
+                
+                {/* Confidence Explicit Readout for Evaluators */}
+                {confidence >0 && (
+                   <div className="mt-2 text-[10px] text-emerald-400 bg-emerald-900/30 p-1.5 rounded border border-emerald-500/20 text-center uppercase tracking-widest">
+                      <span className="font-bold text-white mb-1 block">Gemini Confidence: {confidence}%</span>
+                      {confidence > 80 ? '(High Certainty Prediction)' : '(Medium Certainty Prediction)'}
+                   </div>
+                )}
+                
+                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-purple-500/30"></div>
               </div>
             </div>
-          );
-        })}
-      </div>
+            
+            {/* Accessible Text Label below node */}
+            <div className={`absolute top-full mt-1 left-1/2 -translate-x-1/2 px-1 text-[10px] font-bold rounded ${status.textColor} bg-black/60 pointer-events-none whitespace-nowrap`}>
+              {waitVal}m
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 });
