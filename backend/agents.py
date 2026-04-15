@@ -135,10 +135,10 @@ Return ONLY valid JSON matching this exact schema:
 {{
   "decisions": [
     {{
-      "trigger": "string describing what triggered this decision",
+      "trigger": "string describing what triggered this decision (BE SPECIFIC)",
       "action": "string describing the action taken",
-      "reasoning": "string explaining Gemini reasoning",
-      "alternatives_considered": ["alternative 1", "alternative 2"],
+      "reasoning": "string explaining Gemini reasoning (DEEP ANALYSIS)",
+      "alternatives_considered": ["detailed alternative 1", "detailed alternative 2"],
       "from_zone": "zone_id",
       "to_zone": "zone_id",
       "people": 0,
@@ -156,7 +156,7 @@ Return ONLY valid JSON matching this exact schema:
     "wait_time_reduction": 0,
     "load_balanced": 0
   }},
-  "narration": "A specific, non-repetitive human-readable summary of current AI analysis referencing actual zone data."
+  "narration": "[GEMINI NARRATION] A specific, non-repetitive human-readable summary of current AI analysis referencing actual zone data and congestion levels."
 }}
 """
 
@@ -195,9 +195,9 @@ async def generate_gemini_decisions(simulation_state_json: str, emergency: bool 
             parsed_data["aggregate_impact"] = {"wait_time_reduction": 0, "load_balanced": 0}
 
         if "narration" not in parsed_data:
-            parsed_data["narration"] = "Google Gemini AI is actively optimizing crowd flow."
+            parsed_data["narration"] = "[GEMINI] Google Gemini AI is actively optimizing crowd flow."
 
-        print(f"[Gemini OK] decisions={len(parsed_data.get('decisions',[]))}, preds={len(parsed_data.get('zone_predictions',[]))}")
+        print(f"[GEMINI] Response Processed: decisions={len(parsed_data.get('decisions',[]))}, predictions={len(parsed_data.get('zone_predictions',[]))}")
 
         validated = AIResponse(**parsed_data)
         return validated.model_dump()

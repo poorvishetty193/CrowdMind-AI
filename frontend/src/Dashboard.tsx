@@ -4,7 +4,7 @@ import { ExplainableAIPanel } from './components/ExplainableAIPanel.tsx';
 import { PulseGauge, ImpactMetrics, GeminiTelemetry } from './components/Metrics.tsx';
 import { TimelineSlider } from './components/TimelineSlider.tsx';
 import { DemoController } from './components/DemoController.tsx';
-import { Zap, PlayCircle, PauseCircle, Bot, PowerOff, Loader2 } from 'lucide-react';
+import { Zap, PlayCircle, PauseCircle, Bot, PowerOff, Loader2, AlertTriangle } from 'lucide-react';
 
 const WS_URL = 'ws://localhost:8000/ws';
 const API_URL = 'http://localhost:8000';
@@ -197,8 +197,8 @@ export function Dashboard() {
         <div>
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-3">
             CrowdMind AI
-            <span className={`text-[10px] px-2 py-1 rounded-full uppercase border font-bold tracking-widest ${aiMode === 'active' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
-              {aiMode === 'active' ? '🟢 AI Control Mode: Powered by Google Gemini' : '⚙️ AI Mode: OFF (Simulation Only)'}
+            <span className={`text-[12px] px-3 py-1.5 rounded-full uppercase border-2 font-black tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.3)] ${aiMode === 'active' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' : 'bg-red-500/20 text-red-400 border-red-500/50'}`}>
+              {aiMode === 'active' ? '🧠 Powered by Google Gemini AI – Real-Time Decision Engine' : '⚙️ AI Mode: OFF (Manual Simulation)'}
             </span>
           </h1>
           <p className="text-xs text-gray-500 mt-1 flex items-center gap-2 tracking-widest uppercase">
@@ -243,17 +243,24 @@ export function Dashboard() {
 
       {/* ── Narration Marquee ─────────────────────────────── */}
       {simulationState?.ai_insights?.narration && isAiMode && (
-        <div className="w-full bg-blue-950/30 border-y border-blue-500/20 py-2 overflow-hidden">
-          <div className="text-blue-400 text-xs font-semibold whitespace-nowrap animate-[marquee_20s_linear_infinite]">
-            🧠 [GOOGLE GEMINI NARRATION] &nbsp;•&nbsp; {simulationState.ai_insights.narration} &nbsp;•&nbsp; System evaluating physical state in real-time &nbsp;•&nbsp;
+        <div className="w-full bg-blue-900/20 border-y border-blue-500/30 py-3 overflow-hidden shadow-[inset_0_0_20px_rgba(59,130,246,0.1)]">
+          <div className="text-blue-400 text-sm font-bold whitespace-nowrap animate-[marquee_25s_linear_infinite] flex items-center gap-10">
+            <span>🧠 [REAL-TIME GEMINI NARRATION] • {simulationState.ai_insights.narration}</span>
+            <span>⚡ SYSTEM IMPACT: Wait times reduced by {simulationState?.ai_telemetry?.wait_time_reduced_percentage ?? 0}%</span>
+            <span>🧠 [DECISION ENGINE] • Processing live stadium telemetry via Google Gemini API</span>
+            <span className="opacity-50">• {new Date().toLocaleTimeString()} •</span>
           </div>
         </div>
       )}
 
       {/* ── Replay Banner ──────────────────────────────────── */}
       {isReplaying && (
-        <div className="w-full bg-purple-900/30 border border-purple-500/40 py-2 rounded-lg text-center text-purple-300 font-bold text-xs uppercase tracking-widest animate-pulse">
-          🎬 Replay Mode Active – Showing AI Optimization &nbsp;|&nbsp; Frame {replayIndex + 1} / {framesBuffer.current.length}
+        <div className="w-full bg-purple-900/40 border-2 border-purple-500/60 py-4 rounded-xl text-center text-purple-100 font-black text-sm uppercase tracking-[0.2em] animate-pulse shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+          <span className="flex items-center justify-center gap-4">
+             <span className="animate-spin text-lg">🎬</span> 
+             AI OPTIMIZATION REPLAY – DEMONSTRATING IMPACT ACCROSS STADIUM NODES
+             <span className="bg-purple-600 px-3 py-1 rounded text-xs font-mono ml-4">FRAME {replayIndex + 1} / {framesBuffer.current.length}</span>
+          </span>
         </div>
       )}
 
@@ -261,13 +268,45 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full">
 
         {/* Telemetry Bar — full width */}
-        <div className="lg:col-span-12">
-          <GeminiTelemetry
-            telemetry={simulationState.ai_telemetry}
-            metadata={simulationState.ai_metadata}
-            lastUpdate={simulationState.timestamp}
-            isAiMode={isAiMode}
-          />
+        <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-3">
+            <GeminiTelemetry
+              telemetry={simulationState.ai_telemetry}
+              metadata={simulationState.ai_metadata}
+              lastUpdate={simulationState.timestamp}
+              isAiMode={isAiMode}
+            />
+          </div>
+          
+          {/* Top Critical Zone Card */}
+          <div className="glass-panel p-4 border border-red-500/30 bg-red-950/10 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black text-red-400 uppercase tracking-tighter flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Top Critical Zone
+              </span>
+              <span className="text-[9px] text-gray-500 font-mono">LIVE AI SCAN</span>
+            </div>
+            {(() => {
+              const mostCongested = [...(simulationState.zones || [])].sort((a, b) => (b.current_occupancy / b.capacity) - (a.current_occupancy / a.capacity))[0];
+              const isHigh = mostCongested && (mostCongested.current_occupancy / mostCongested.capacity) > 0.8;
+              return mostCongested ? (
+                <div className="mt-2">
+                  <div className="text-lg font-bold text-gray-100 leading-none">{mostCongested.name}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                      <div className={`h-full transition-all duration-500 ${isHigh ? 'bg-red-500' : 'bg-amber-500'}`} style={{ width: `${(mostCongested.current_occupancy / mostCongested.capacity) * 100}%` }} />
+                    </div>
+                    <span className={`text-xs font-bold ${isHigh ? 'text-red-400' : 'text-amber-400'}`}>
+                      {Math.round((mostCongested.current_occupancy / mostCongested.capacity) * 100)}%
+                    </span>
+                  </div>
+                  <div className="text-[9px] text-emerald-400 mt-2 font-bold uppercase tracking-widest flex items-center gap-1">
+                    <Zap className="w-2.5 h-2.5" /> {isAiMode ? 'Gemini Routing Active' : 'Rerouting Disabled'}
+                  </div>
+                </div>
+              ) : null;
+            })()}
+          </div>
         </div>
 
         {/* Left: Map + metrics */}

@@ -137,7 +137,7 @@ def apply_ai_routing(ai_data: dict, burst: bool) -> None:
             decision["people"] = qty   # update payload so UI shows real number
             gemini_decisions_count += 1
             simulator.ai_telemetry["total_decisions"] += 1
-            print(f"[AI Routing] Gemini moved {qty} people: {src_id} -> {tgt_id} (conf={decision.get('confidence_score')}%)")
+            print(f"[GEMINI] Decision Executed: {qty} people moved {src_id} -> {tgt_id} (conf={decision.get('confidence_score')}%)")
 
     after_wait = simulator.calculate_wait_times()
 
@@ -195,7 +195,7 @@ async def run_ai_cycle(tick_count):
         for z in simulator.state.zones if z.capacity > 0
     )
     
-    print(f"[AI Cycle] Tick {tick_count} - Calling Gemini... (emergency={is_emergency})")
+    print(f"[GEMINI] AI Cycle Started (Tick {tick_count}) - Requesting decisions... (emergency={is_emergency})")
     ai_data = await generate_gemini_decisions(
         json.dumps(simulator.state.model_dump()),
         emergency=is_emergency
@@ -265,7 +265,7 @@ def set_ai_mode(enabled: bool):
     """Toggle AI mode. When disabled, simulation runs without Gemini. Marked ai_mode: 'disabled'."""
     global is_ai_mode_active
     is_ai_mode_active = enabled
-    print(f"[AI Mode] Set to: {'active' if enabled else 'disabled'}")
+    print(f"[GEMINI] AI Mode Toggle: {'ENABLED' if enabled else 'DISABLED'}")
     return {"status": "success", "ai_mode": "active" if enabled else "disabled"}
 
 

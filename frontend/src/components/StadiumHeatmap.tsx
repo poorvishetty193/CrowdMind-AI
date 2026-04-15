@@ -65,6 +65,8 @@ export const StadiumHeatmap = React.memo(({ zones, aiInsights, timelineOffset }:
         const prediction = aiInsights?.zone_predictions?.find((z: any) => z.zone_id === zone.id);
         const confidence = prediction?.confidence_score || 0;
         
+        const ariaLabel = `${zone.name}: ${zone.current_occupancy} of ${zone.capacity} capacity. ${status.label} congestion. ${waitVal} minutes wait time. AI Confidence: ${confidence}%`;
+        
         // Dynamic halo intensity based on Google Gemini Confidence bounds
         const haloStyle = confidence > 0 ? {
            boxShadow: `0 0 ${confidence / 4}px ${confidence / 8}px rgba(16, 185, 129, ${confidence / 100})`
@@ -80,7 +82,13 @@ export const StadiumHeatmap = React.memo(({ zones, aiInsights, timelineOffset }:
             <div className={`absolute inset-0 rounded-full blur-md transition-all duration-1000 ${status.pulse} ${status.animate || ''} scale-150`}></div>
             
             {/* Core Node */}
-            <div style={haloStyle} className={`relative w-6 h-6 rounded-full border-2 border-black transition-all duration-1000 ${status.color} cursor-pointer group-hover:scale-110`}>
+            <div 
+              style={haloStyle} 
+              className={`relative w-6 h-6 rounded-full border-2 border-black transition-all duration-1000 ${status.color} cursor-pointer group-hover:scale-110`}
+              role="img"
+              aria-label={ariaLabel}
+              tabIndex={0}
+            >
               
               {/* Evaluator Explicit Tooltip */}
               <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-52 bg-black/95 p-3 rounded border border-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none transform -translate-y-2 group-hover:translate-y-0 z-50">
@@ -110,8 +118,8 @@ export const StadiumHeatmap = React.memo(({ zones, aiInsights, timelineOffset }:
             </div>
             
             {/* Accessible Text Label below node */}
-            <div className={`absolute top-full mt-1 left-1/2 -translate-x-1/2 px-1 text-[10px] font-bold rounded ${status.textColor} bg-black/60 pointer-events-none whitespace-nowrap`}>
-              {waitVal}m
+            <div className={`absolute top-full mt-1 left-1/2 -translate-x-1/2 px-1 text-[9px] font-black rounded uppercase ${status.textColor} bg-black/80 pointer-events-none whitespace-nowrap border border-white/10`}>
+              {status.label}: {waitVal}m
             </div>
           </div>
         );

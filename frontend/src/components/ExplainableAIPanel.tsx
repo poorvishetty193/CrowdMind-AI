@@ -22,9 +22,10 @@ export function ExplainableAIPanel({ aiInsights, isAiMode }: { aiInsights: any, 
       <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-800">
         <div className="flex items-center gap-2">
           <BrainCircuit className="w-5 h-5 text-purple-400 animate-pulse" />
-          <h2 className="text-lg font-medium tracking-wide text-gray-100">AI Decision Replay Log</h2>
+          <h2 className="text-lg font-bold tracking-tight text-gray-100 uppercase">Gemini AI Decision Replay</h2>
         </div>
         <div className="flex items-center gap-2">
+          <span className="text-[10px] text-gray-500 font-mono tracking-tighter">ENGINE: GEMINI-2.0-FLASH</span>
           <span className="relative flex h-3 w-3">
              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
@@ -56,7 +57,10 @@ export function ExplainableAIPanel({ aiInsights, isAiMode }: { aiInsights: any, 
                <span className="text-[9px] font-mono text-gray-500 flex items-center gap-1">
                   <Fingerprint className="w-3 h-3 text-blue-500" /> ID: {decision.decision_id || "A29Z-99X-GEMINI"}
                </span>
-               <span className="text-[9px] uppercase font-bold text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded border border-blue-500/20">Source: {decision.source || "gemini"}</span>
+               <div className="flex flex-col items-end gap-1">
+                 <span className="text-[9px] uppercase font-black text-white bg-emerald-600 px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.4)]">AI DECISION APPLIED</span>
+                 <span className="text-[9px] uppercase font-bold text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded border border-blue-500/20">Source: Google Gemini AI</span>
+               </div>
             </div>
 
             <div className="mb-3">

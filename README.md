@@ -1,27 +1,26 @@
-# 🏟️ CrowdMind AI
+# 🧠 CrowdMind AI – Autonomous Stadium Safety System
 
-An intelligent, proactive platform acting as the dynamic *nervous system* for large-scale sporting venues. CrowdMind AI abandons static mapping in favor of actual autonomous AI control, eliminating crowd buildup before it happens by tracking real-time predictions and load-balancing physical reality natively via explicit Evaluator logic loops.
+**Powered by Google Gemini AI**
+
+CrowdMind AI is a state-of-the-art, real-time crowd management platform designed to prevent stadium disasters and optimize fan experience. Unlike traditional systems, CrowdMind uses **Google Gemini 2.0 Flash** to make autonomous, high-stakes routing decisions in milliseconds.
 
 ---
 
-## 🚀 What Makes This Unique
-**This is not a simulation. This is a real-time AI decision system powered by Google Gemini.** 
+## 🚀 What Makes This Unique?
+* **Real-Time AI Decision Engine**: Every routing choice is generated dynamically by Google Gemini based on live stadium telemetry.
+* **Autonomous Control**: The system doesn't just monitor; it *acts* by redistributing crowds to prevent critical saturation.
+* **Explainable AI (XAI)**: Every decision comes with Gemini-generated reasoning, confidence scores, and alternatives considered.
+* **Predictive Wait Times**: Gemini predicts future congestion 5-15 minutes in advance, allowing for pre-emptive action.
 
-The entire nervous system lacks rule-based overrides or simplistic static checks. 100% of the active mitigation happening inside CrowdMind AI is a direct parsing of the rigorous decision payloads mapped by GenAI. 
+---
 
-## 🧠 AI-Driven Architecture
-
-**All decisions are generated using Google Gemini 2.0 Flash.** 
-**No rule-based routing logic is used.** 
-
-Our logic flow behaves entirely on dynamic extraction from Google's multimodal backend:
-1. **Simulation state generation:** A physical state matrix tracks real-world capacities across all stadium nodes.
-2. **Generative Processing:** Data is injected to Gemini via pure Prompt constraints formatting live JSON arrays.
-3. **Decisions Returned:** Gemini explicitly returns structured predictions, `decision_id` routing directives, reasoning matrices, and explicit `confidence_scores`.
-4. **Physical Injection:** The `backend` takes these dynamic payload extracts and rips crowds forcefully from source vectors, actively altering latency times securely inside real-time bounding constraints.
-5. **Delta Sync:** React UIs capture the `ai_metadata` updating in pure WebSockets, showcasing exactly how many people Gemini evacuated simultaneously.
-
-**Keywords:** AI-driven, real-time prediction, generative AI, Gemini-powered decision system, autonomous control, predictive modeling, decision trees, strict Pydantic JSON structure extraction.
+## 🧠 How Gemini Drives the System
+The core loop of CrowdMind AI is fully driven by Google Gemini:
+1. **Simulation**: The system models thousands of attendees moving between zones.
+2. **Telemetry**: Raw zone data (occupancy, capacity, wait times) is sent to Gemini.
+3. **Intelligence (Gemini)**: Gemini analyzes the state, identifies hazards, and generates routing decisions.
+4. **Execution**: The backend applies Gemini's decisions directly to the live environment.
+5. **UI Visibility**: The dashboard reflects Gemini's "thought process" in real-time.
 
 ---
 
